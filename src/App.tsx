@@ -30,7 +30,7 @@ import CommunityProfile from 'screens/CommunityProfile/CommunityProfile';
 import OrganizationVenues from 'screens/OrganizationVenues/OrganizationVenues';
 import Leaderboard from 'screens/Leaderboard/Leaderboard';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 // User Portal Components
 import Donate from 'screens/UserPortal/Donate/Donate';
 import Events from 'screens/UserPortal/Events/Events';
@@ -39,19 +39,19 @@ import Organizations from 'screens/UserPortal/Organizations/Organizations';
 import People from 'screens/UserPortal/People/People';
 import Settings from 'screens/UserPortal/Settings/Settings';
 import Chat from 'screens/UserPortal/Chat/Chat';
-import { useQuery } from '@apollo/client';
-import { CHECK_AUTH } from 'GraphQl/Queries/Queries';
+// import { useQuery } from '@apollo/client';
+// import { CHECK_AUTH } from 'GraphQl/Queries/Queries';
 import Advertisements from 'components/Advertisements/Advertisements';
 import SecuredRouteForUser from 'components/UserPortal/SecuredRouteForUser/SecuredRouteForUser';
 
-import useLocalStorage from 'utils/useLocalstorage';
+// import useLocalStorage from 'utils/useLocalstorage';
 import UserScreen from 'screens/UserPortal/UserScreen/UserScreen';
 import EventDashboardScreen from 'components/EventDashboardScreen/EventDashboardScreen';
 import Campaigns from 'screens/UserPortal/Campaigns/Campaigns';
 import Pledges from 'screens/UserPortal/Pledges/Pledges';
 import VolunteerManagement from 'screens/UserPortal/Volunteer/VolunteerManagement';
 
-const { setItem } = useLocalStorage();
+// const { setItem } = useLocalStorage();
 
 /**
  * This is the main function for our application. It sets up all the routes and components,
@@ -96,20 +96,20 @@ function app(): JSX.Element {
 
   // TODO: Fetch Installed plugin extras and store for use within MainContent and Side Panel Components.
 
-  const { data, loading } = useQuery(CHECK_AUTH);
+  // const { data, loading } = useQuery(CHECK_AUTH);
 
-  useEffect(() => {
-    if (data) {
-      setItem('name', `${data.checkAuth.firstName} ${data.checkAuth.lastName}`);
-      setItem('id', data.checkAuth._id);
-      setItem('email', data.checkAuth.email);
-      setItem('IsLoggedIn', 'TRUE');
-      setItem('FirstName', data.checkAuth.firstName);
-      setItem('LastName', data.checkAuth.lastName);
-      setItem('UserImage', data.checkAuth.image);
-      setItem('Email', data.checkAuth.email);
-    }
-  }, [data, loading]);
+  // useEffect(() => {
+  //   if (data) {
+  //     setItem('name', `${data.checkAuth.firstName} ${data.checkAuth.lastName}`);
+  //     setItem('id', data.checkAuth._id);
+  //     setItem('email', data.checkAuth.email);
+  //     setItem('IsLoggedIn', 'TRUE');
+  //     setItem('FirstName', data.checkAuth.firstName);
+  //     setItem('LastName', data.checkAuth.lastName);
+  //     setItem('UserImage', data.checkAuth.image);
+  //     setItem('Email', data.checkAuth.email);
+  //   }
+  // }, [data, loading]);
 
   const extraRoutes = Object.entries(installedPlugins).map(
     (
