@@ -1,14 +1,9 @@
 import React from 'react';
+import type { Mock } from 'vitest';
+import { describe, expect, vi, it, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/react-testing';
-import {
-  BrowserRouter,
-  MemoryRouter,
-  Route,
-  Routes,
-  useNavigate,
-  useParams,
-} from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import LeaveOrganization from './LeaveOrganization';
 import {
   ORGANIZATIONS_LIST,
@@ -17,32 +12,33 @@ import {
 import { REMOVE_MEMBER_MUTATION } from 'GraphQl/Mutations/mutations';
 import { getItem } from 'utils/useLocalstorage';
 import { toast } from 'react-toastify';
+import { StaticMockLink } from 'utils/StaticMockLink';
 
-jest.mock('react-toastify', () => ({
-  toast: { success: jest.fn() }, // Mock toast function
+vi.mock('react-toastify', () => ({
+  toast: { success: vi.fn() }, // Mock toast function
 }));
 
 Object.defineProperty(window, 'localStorage', {
   value: {
-    getItem: jest.fn(),
-    setItem: jest.fn(),
-    removeItem: jest.fn(),
-    clear: jest.fn(),
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
   },
   writable: true,
 });
 
 // Mock useParams to return a test organization ID
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useParams: jest.fn(),
-  useNavigate: jest.fn(),
+vi.mock('react-router-dom', () => ({
+  ...vi.importActual('react-router-dom'),
+  useParams: vi.fn(),
+  useNavigate: vi.fn(),
 }));
 
 // Mock the custom hook
-jest.mock('utils/useLocalstorage', () => {
+vi.mock('utils/useLocalstorage', () => {
   return {
-    getItem: jest.fn((prefix: string, key: string) => {
+    getItem: vi.fn((prefix: string, key: string) => {
       if (prefix === 'Talawa-admin' && key === 'email')
         return 'test@example.com';
       if (prefix === 'Talawa-admin' && key === 'userId') return '12345';
@@ -235,17 +231,18 @@ const errorMocks = [
 
 beforeEach(() => {
   localStorage.clear();
-  jest.clearAllMocks(); // Clear mocks before each test
-  (useParams as jest.Mock).mockReturnValue({ orgId: 'test-org-id' });
+  vi.clearAllMocks(); // Clear mocks before each test
+  (useParams as Mock).mockReturnValue({ orgId: 'test-org-id' });
 });
 
+const link = new StaticMockLink(mocks, true);
+const link2 = new StaticMockLink(errorMocks, true);
+
 describe('LeaveOrganization Component', () => {
-  test('renders organization details and shows loading spinner', async () => {
+  it('renders organization details and shows loading spinner', async () => {
     render(
-      <MockedProvider mocks={mocks.slice(0, 1)} addTypename={false}>
-        <BrowserRouter>
-          <LeaveOrganization />
-        </BrowserRouter>
+      <MockedProvider mocks={mocks.slice(0, 1)} addTypename={false} link={link}>
+        <LeaveOrganization />
       </MockedProvider>,
     );
     const spinner = await screen.findByRole('status');
@@ -258,17 +255,10 @@ describe('LeaveOrganization Component', () => {
     });
   });
 
-  test('renders organization details and displays content correctly', async () => {
+  it('renders organization details and displays content correctly', async () => {
     render(
-      <MockedProvider mocks={mocks} addTypename={false}>
-        <MemoryRouter initialEntries={['/user/leaveOrg/test-org-id']}>
-          <Routes>
-            <Route
-              path="/user/leaveOrg/:orgId"
-              element={<LeaveOrganization />}
-            />
-          </Routes>
-        </MemoryRouter>
+      <MockedProvider mocks={mocks} addTypename={false} link={link}>
+        <LeaveOrganization />
       </MockedProvider>,
     );
     await waitFor(() => {
@@ -279,17 +269,10 @@ describe('LeaveOrganization Component', () => {
     });
   });
 
-  test('shows error message when mutation fails', async () => {
+  it('shows error message when mutation fails', async () => {
     render(
-      <MockedProvider mocks={mocks} addTypename={false}>
-        <MemoryRouter initialEntries={['/user/leaveOrg/test-org-id']}>
-          <Routes>
-            <Route
-              path="/user/leaveOrg/:orgId"
-              element={<LeaveOrganization />}
-            />
-          </Routes>
-        </MemoryRouter>
+      <MockedProvider mocks={mocks} addTypename={false} link={link}>
+        <LeaveOrganization />
       </MockedProvider>,
     );
     await waitFor(() => {
@@ -308,8 +291,10 @@ describe('LeaveOrganization Component', () => {
     expect(screen.queryByText(/An error occurred!/i)).not.toBeInTheDocument();
   });
 
-  test('logs an error when unable to access localStorage', () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+  it('logs an error when unable to access localStorage', () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     const userEmail = (() => {
       try {
         return getItem('Talawa-admin-error', 'user-email-error') ?? '';
@@ -335,16 +320,14 @@ describe('LeaveOrganization Component', () => {
     consoleErrorSpy.mockRestore();
   });
 
-  test('navigates and shows toast when email matches', async () => {
-    const mockNavigate = jest.fn();
-    (useNavigate as jest.Mock).mockReturnValue(mockNavigate);
-    const toastSuccessMock = jest.fn();
+  it('navigates and shows toast when email matches', async () => {
+    const mockNavigate = vi.fn();
+    (useNavigate as Mock).mockReturnValue(mockNavigate);
+    const toastSuccessMock = vi.fn();
     toast.success = toastSuccessMock;
     render(
-      <MockedProvider mocks={mocks} addTypename={false}>
-        <BrowserRouter>
-          <LeaveOrganization />
-        </BrowserRouter>
+      <MockedProvider mocks={mocks} addTypename={false} link={link}>
+        <LeaveOrganization />
       </MockedProvider>,
     );
     const leaveButton = await screen.findByRole('button', {
@@ -375,12 +358,10 @@ describe('LeaveOrganization Component', () => {
     });
   });
 
-  test('shows error when email is missing', async () => {
+  it('shows error when email is missing', async () => {
     render(
-      <MockedProvider mocks={mocks.slice(0, 2)} addTypename={false}>
-        <BrowserRouter>
-          <LeaveOrganization />
-        </BrowserRouter>
+      <MockedProvider mocks={mocks.slice(0, 2)} addTypename={false} link={link}>
+        <LeaveOrganization />
       </MockedProvider>,
     );
     const leaveButton = await screen.findByRole('button', {
@@ -407,12 +388,10 @@ describe('LeaveOrganization Component', () => {
     });
   });
 
-  test('shows error when email does not match', async () => {
+  it('shows error when email does not match', async () => {
     render(
-      <MockedProvider mocks={mocks.slice(0, 2)} addTypename={false}>
-        <BrowserRouter>
-          <LeaveOrganization />
-        </BrowserRouter>
+      <MockedProvider mocks={mocks.slice(0, 2)} addTypename={false} link={link}>
+        <LeaveOrganization />
       </MockedProvider>,
     );
     const leaveButton = await screen.findByRole('button', {
@@ -439,12 +418,10 @@ describe('LeaveOrganization Component', () => {
     });
   });
 
-  test('resets state when back button pressed', async () => {
+  it('resets state when back button pressed', async () => {
     render(
-      <MockedProvider mocks={mocks} addTypename={false}>
-        <BrowserRouter>
-          <LeaveOrganization />
-        </BrowserRouter>
+      <MockedProvider mocks={mocks} addTypename={false} link={link}>
+        <LeaveOrganization />
       </MockedProvider>,
     );
     const leaveButton = await screen.findByRole('button', {
@@ -467,12 +444,10 @@ describe('LeaveOrganization Component', () => {
     ).toBeInTheDocument();
   });
 
-  test('resets state when modal is closed', async () => {
+  it('resets state when modal is closed', async () => {
     render(
-      <MockedProvider mocks={mocks} addTypename={false}>
-        <BrowserRouter>
-          <LeaveOrganization />
-        </BrowserRouter>
+      <MockedProvider mocks={mocks} addTypename={false} link={link}>
+        <LeaveOrganization />
       </MockedProvider>,
     );
     const leaveButton = await screen.findByRole('button', {
@@ -484,14 +459,12 @@ describe('LeaveOrganization Component', () => {
     expect(screen.queryByText(/Leave Organization/i)).toBeInTheDocument();
   });
 
-  test('closes modal and resets state when Esc key is pressed', async () => {
-    const mockNavigate = jest.fn();
-    (useNavigate as jest.Mock).mockReturnValue(mockNavigate);
+  it('closes modal and resets state when Esc key is pressed', async () => {
+    const mockNavigate = vi.fn();
+    (useNavigate as Mock).mockReturnValue(mockNavigate);
     render(
-      <MockedProvider mocks={mocks} addTypename={false}>
-        <BrowserRouter>
-          <LeaveOrganization />
-        </BrowserRouter>
+      <MockedProvider mocks={mocks} addTypename={false} link={link}>
+        <LeaveOrganization />
       </MockedProvider>,
     );
     const leaveButton = await screen.findByRole('button', {
@@ -507,9 +480,9 @@ describe('LeaveOrganization Component', () => {
     expect(modal).not.toBeInTheDocument();
   });
 
-  test('displays an error alert when query fails', async () => {
+  it('displays an error alert when query fails', async () => {
     render(
-      <MockedProvider mocks={errorMocks} addTypename={false}>
+      <MockedProvider mocks={errorMocks} addTypename={false} link={link2}>
         <LeaveOrganization />
       </MockedProvider>,
     );
